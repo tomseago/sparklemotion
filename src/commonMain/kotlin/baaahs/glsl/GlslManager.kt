@@ -5,7 +5,7 @@ import baaahs.shaders.GlslShader
 interface GlslManager {
     fun createRenderer(
         fragShader: String,
-        adjustableValues: List<GlslShader.AdjustableValue>,
+        params: List<GlslShader.Param>,
         plugins: List<GlslPlugin> = GlslBase.plugins
     ): GlslRenderer
 }
