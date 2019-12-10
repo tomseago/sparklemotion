@@ -4,6 +4,7 @@ import baaahs.dmx.DmxDevice
 import baaahs.glsl.GlslBase
 import baaahs.net.JvmNetwork
 import baaahs.proto.Ports
+import baaahs.shaders.SoundAnalysisPlugin
 import baaahs.shows.AllShows
 import baaahs.sim.FakeDmxUniverse
 import io.ktor.http.content.*
@@ -53,6 +54,9 @@ fun main(args: Array<String>) {
     beatLinkBeatSource.start()
 
     val daddy = DirectoryDaddy(RealFs(fwDir), "http://${network.link().myAddress.address.hostAddress}:${Ports.PINKY_UI_TCP}/fw")
+    val soundAnalyzer = JvmSoundAnalyzer()
+    GlslBase.plugins.add(SoundAnalysisPlugin(soundAnalyzer))
+
     val pinky =
         Pinky(sheepModel, AllShows.allShows, network, dmxUniverse, beatLinkBeatSource, SystemClock(),
             fs,
@@ -69,7 +73,7 @@ fun main(args: Array<String>) {
 
                 override var showFrameMs: Int = 0
                     set(value) { field = value; /* println("showFrameMs: ${value}") */ }
-            }, JvmSoundAnalyzer(), prerenderPixels = true)
+            }, soundAnalyzer, prerenderPixels = true)
 
     val ktor = (pinky.httpServer as JvmNetwork.RealLink.KtorHttpServer)
     ktor.application.routing {
