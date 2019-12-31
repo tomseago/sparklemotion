@@ -142,6 +142,13 @@ LEDRenderer::render() {
     // The current time, which probably shouldn't be used in favor of .progress but still, be nice
     m_context.now = m_timeBase.currentTime();
 
+    // The m_context time stuff will wrap and do bad things. People will
+    // want to use this tvNow value instead. This stuff needs to be carefully
+    // examined and fixed!
+    // TODO: Rework all the time stuff
+    gettimeofday(&m_context.tvNow, nullptr);
+    m_context.msNow = (m_context.tvNow.tv_sec * 1000) + (m_context.tvNow.tv_usec / 1000);
+
     // Render into all the pixels
     if (m_shader) {
         // The NeoBuffer concept of a renderer allows a buffer to be filtered
@@ -152,11 +159,13 @@ LEDRenderer::render() {
         // by using our own functional approach to shaders where we loop
         // through a tree structure to calculate each output value
 
-        // Rather than forcing the shader to detect the beginning by indexPixel == 0
-        const uint16_t INTERVAL_BASE = 1000;
-        uint16_t intPos = m_timeBase.posInInterval(m_timeBase.currentTime()/1000, 1 * USEC_IN_SEC/1000, INTERVAL_BASE);
-        m_context.progress = ((float)intPos) / (float)INTERVAL_BASE;
+//        const uint16_t INTERVAL_BASE = 1000;
+//        uint16_t intPos = m_timeBase.posInInterval(m_timeBase.currentTime()/1000, 1 * USEC_IN_SEC/1000, INTERVAL_BASE);
+//        m_context.progress = ((float)intPos) / (float)INTERVAL_BASE;
+        // TODO: Remove this from the render context
+        m_context.progress = 0.5f;
 
+        // Rather than forcing the shader to detect the beginning by indexPixel == 0
         m_shader->beginShade(&m_context);
         // ESP_LOGI(TAG, "time=%d, intPos = %d  progress=%f", m_timeBase.currentTime(), intPos, progress);
 
@@ -177,19 +186,19 @@ LEDRenderer::render() {
         }
 
         // Apply gamma correction.
-        {
-            NeoBufferContext<BRAIN_NEO_COLORFEATURE> buf = m_buffer;
-            uint8_t *pCursor = buf.Pixels;
-            uint8_t *pEnd = pCursor + buf.SizePixels;
-            uint32_t pixelIndex = 0;
-            while (pCursor != pEnd) {
-                for (int i = 0; i < BRAIN_NEO_COLORFEATURE::PixelSize; i++) {
-                    uint8_t corrected = Gamma::Correct(*pCursor, m_frameNumber, pixelIndex);
-                    *(pCursor++) = corrected;
-                }
-                pixelIndex++;
-            }
-        }
+//        {
+//            NeoBufferContext<BRAIN_NEO_COLORFEATURE> buf = m_buffer;
+//            uint8_t *pCursor = buf.Pixels;
+//            uint8_t *pEnd = pCursor + buf.SizePixels;
+//            uint32_t pixelIndex = 0;
+//            while (pCursor != pEnd) {
+//                for (int i = 0; i < BRAIN_NEO_COLORFEATURE::PixelSize; i++) {
+//                    uint8_t corrected = Gamma::Correct(*pCursor, m_frameNumber, pixelIndex);
+//                    *(pCursor++) = corrected;
+//                }
+//                pixelIndex++;
+//            }
+//        }
 
         m_shader->endShade();
 

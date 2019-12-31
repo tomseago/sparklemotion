@@ -92,6 +92,7 @@ NetTransport::_interfaceTask() {
     ESP_LOGE(TAG, "Starting network drivers");
     reconfigure();
 
+#if BRAIN_ETHERNET_ENABLED
     vTaskDelay(pdMS_TO_TICKS(20000));
 
     ESP_LOGE(TAG, "Checking for ethernet link up");
@@ -103,6 +104,7 @@ NetTransport::_interfaceTask() {
     } else {
         ESP_LOGE(TAG, "Ethernet up - cool");
     }
+#endif // BRAIN_ETHERNET_ENABLED
 
 //    vTaskDelay(pdMS_TO_TICKS(1000));
 //
@@ -184,10 +186,12 @@ NetTransport::reconfigure() {
     m_pEth->setEnabled(true);
 #endif
 
-//    wifiSta();
-//    m_pWifiSta->setCredentials(GlobalConfig.staSsid(), GlobalConfig.staPass());
-//    m_pWifiSta->setEnabled(true);
-//
-//    wifiAp();
-//    m_pWifiAp->setEnabled(true);
+#if BRAIN_WIFI_ENABLED
+    wifiSta();
+    m_pWifiSta->setCredentials(GlobalConfig.staSsid(), GlobalConfig.staPass());
+    m_pWifiSta->setEnabled(true);
+
+    wifiAp();
+    m_pWifiAp->setEnabled(true);
+#endif // BRAIN_WIFI_ENABLED
 }

@@ -118,12 +118,12 @@ BrainUI::buttonDown(BrainButton& sw, bool longPress) {
     ESP_LOGI(TAG, "%s Button  V  isLong=%d", isLeft ? "Left " : "Right", longPress);
 
     if (isLeft) {
-        leftEye.setValue(leftEye.getValue() ? 0 : 255);
-        BrainUiEvent evt(BrainUiEvent::KeyPress, BrainUiEvent::Left, longPress ? 0 : BrainUiEvent::Long);
+//        leftEye.setValue(leftEye.getValue() ? 0 : 255);
+        BrainUiEvent evt(BrainUiEvent::KeyPress, BrainUiEvent::Left, longPress ? BrainUiEvent::Long : 0);
         evt.post();
     } else {
-        rightEye.setValue(rightEye.getValue() ? 0 : 255);
-        BrainUiEvent evt(BrainUiEvent::KeyPress, BrainUiEvent::Right, longPress ? 0 : BrainUiEvent::Long);
+//        rightEye.setValue(rightEye.getValue() ? 0 : 255);
+        BrainUiEvent evt(BrainUiEvent::KeyPress, BrainUiEvent::Right, longPress ? BrainUiEvent::Long : 0);
         evt.post();
     }
 };

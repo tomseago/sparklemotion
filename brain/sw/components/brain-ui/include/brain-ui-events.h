@@ -34,4 +34,8 @@ struct BrainUiEvent{
     }
 
     void post();
+
+    bool isLong() {
+        return modifiers & BrainUiEvent::Long;
+    }
 };

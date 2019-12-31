@@ -1,4 +1,6 @@
 
+#pragma once
+
 // We need this not really ported to plain IDF library
 // so we pretend that we are in the arduino world
 #define ARDUINO_ARCH_ESP32
@@ -66,6 +68,7 @@ public:
 //     */
 //    void startLocalRenderTask();
 
+    // TODO: Protect setting the shader against the render semaphore
     void setShader(LEDShader* shader) { m_shader = shader; }
     void render();
 

@@ -30,7 +30,7 @@
  * additional variant following this pattern. These can be
  * safely stored on the master branch without conflict.
  */
-#define BRAIN_VARIANT_REV_E
+//#define BRAIN_VARIANT_REV_E
 //#define BRAIN_VARIANT_REV_D_REWORKED
 //#define BRAIN_VARIANT_PANEL_TESTER
 //#define BRAIN_VARIANT_GLAMSIGN
@@ -38,6 +38,28 @@
 
 //#define BRAIN_DEFAULT_BRIGHTNESS   16
 
+#define BRAIN_VARIANT_2811_WEARABLE
+
+/********************************************************************
+ * A wearable sign
+ ********************************************************************/
+#ifdef BRAIN_VARIANT_2811_WEARABLE
+
+#define BRAIN_ETHERNET_ENABLED false
+#define BRAIN_WIFI_ENABLED true
+#define BRAIN_DEFAULT_PIXEL_COUNT 216
+
+// Max for 2 amp draw on launch sign is 60
+#define BRAIN_DEFAULT_BRIGHTNESS   60
+#define BRAIN_POWER_ON_COLOR       RgbColor(255, 0, 0)
+
+// So that we get some visible gamma correction love
+#define BRAIN_DEFAULT_FPS 60
+
+// Get the pins for Rev E
+#define BRAIN_VARIANT_REV_E
+
+#endif
 
 /********************************************************************
  * The Panel Testers are two boxes built by Tom S. that have
@@ -245,10 +267,32 @@
  * let you disable ethernet for situations where it either
  * makes no sense or flat out doesn't exist, such as when
  * using an ESP pico board.
+ *
+ * One significant issue though is with the code which will
+ * reboot the system if it doesn't see an ethernet link
+ * within 30 seconds. So in reality if you aren't using
+ * ethernet you probably DO want to disable this.
  */
 #ifndef BRAIN_ETHERNET_ENABLED
 #define BRAIN_ETHERNET_ENABLED     true
 #endif
+
+/**
+ * Similar to the ethernet enablement this controls whether
+ * ANY wifi should be enabled or not. Turning this on will
+ * get you both an AP and a STA interface. For wifi applications
+ * it's most common that you want both of these because AP
+ * gets used for configuration and STA is useful if you are
+ * developing and don't want to keep swapping to the board's
+ * AP or if you want several boards to gang together on a
+ * common fixed AP (which is typically a good idea because
+ * the built in AP is really only good for single user sort
+ * of things.)
+ */
+#ifndef BRAIN_WIFI_ENABLED
+#define BRAIN_WIFI_ENABLED false
+#endif
+
 
 /**
  * The NeoBuffer library we use for rendering pixel data is

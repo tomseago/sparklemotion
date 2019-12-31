@@ -42,3 +42,6 @@
 #define TAG_SHDTREE "#shdtre"
 #define TAG_UI      "#    ui"
 #define TAG_OTA     "#   ota"
+
+#define TAG_ISO     "#   iso"
+#define TAG_CS      "#    cs"
