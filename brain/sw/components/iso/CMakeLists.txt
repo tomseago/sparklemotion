@@ -7,6 +7,7 @@ set(COMPONENT_SRCS
         "iso-shader-rainbow.cpp"
         "iso-shader-stack.cpp"
         "iso-shader-list.cpp"
+        "iso-shader-manual.cpp"
         )
 
 

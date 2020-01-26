@@ -38,7 +38,27 @@
 
 //#define BRAIN_DEFAULT_BRIGHTNESS   16
 
-#define BRAIN_VARIANT_2811_WEARABLE
+#define BRAIN_VARIANT_GENERIC_TESTER
+
+/********************************************************************
+ * A wearable sign
+ ********************************************************************/
+#ifdef BRAIN_VARIANT_GENERIC_TESTER
+
+#define BRAIN_ETHERNET_ENABLED false
+#define BRAIN_WIFI_ENABLED true
+#define BRAIN_DEFAULT_PIXEL_COUNT 10
+
+#define BRAIN_DEFAULT_BRIGHTNESS   128
+#define BRAIN_POWER_ON_COLOR       RgbColor(255, 0, 0)
+
+// So that we get some visible gamma correction love
+#define BRAIN_DEFAULT_FPS 60
+
+// Get the pins for Rev E
+#define BRAIN_VARIANT_REV_E
+
+#endif
 
 /********************************************************************
  * A wearable sign

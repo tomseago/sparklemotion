@@ -7,6 +7,7 @@ set(COMPONENT_SRCS
         "config_handler.cpp"
         "time_handler.cpp"
         "words_handler.cpp"
+        "color_handler.cpp"
         )
 
 set(COMPONENT_REQUIRES brain-common spiffs esp_http_server app_update)
