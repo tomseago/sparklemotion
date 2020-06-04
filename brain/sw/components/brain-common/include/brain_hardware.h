@@ -49,7 +49,7 @@
 #define BRAIN_WIFI_ENABLED true
 #define BRAIN_DEFAULT_PIXEL_COUNT 10
 
-#define BRAIN_DEFAULT_BRIGHTNESS   128
+#define BRAIN_DEFAULT_BRIGHTNESS   255 
 #define BRAIN_POWER_ON_COLOR       RgbColor(255, 0, 0)
 
 // So that we get some visible gamma correction love

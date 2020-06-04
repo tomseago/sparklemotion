@@ -45,3 +45,5 @@
 
 #define TAG_ISO     "#   iso"
 #define TAG_CS      "#    cs"
+
+#define TAG_PROBE   "# probe"

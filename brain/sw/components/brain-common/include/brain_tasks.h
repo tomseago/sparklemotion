@@ -110,6 +110,17 @@ struct BrainTasks {
     };
 
     /**
+     * Probe periodically polls the temperature and then broadcasts
+     * an event about it
+     */
+    TaskDef probe = {
+            .name = "probe",
+            .stack = 3024,
+            .priority = 0,
+            .coreId = tskNO_AFFINITY,
+    };
+
+    /**
      * The UI task processes button presses and turns them into key events.
      * It also drives the on-board leds like the eyes and the tri-color
      * led.
