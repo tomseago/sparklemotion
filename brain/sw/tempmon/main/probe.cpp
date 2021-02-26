@@ -236,7 +236,8 @@ Probe::_task() {
         if (xWakeTime - xLastWakeTime > pdMS_TO_TICKS(10000)) {
             // Do a start time
             xLastWakeTime = xWakeTime;
-            m_dhtSensor.maybeRead();
+            //m_dhtSensor.maybeRead();
+            getTemp();
         }
     }
 }
@@ -245,10 +246,10 @@ float
 Probe::getTemp() {
 //    float t = ds18b20_get_temp();
 
-//    m_dallasTemp.requestTemperatures();
-//    float tempC = m_dallasTemp.getTempCByIndex(0);
+    m_dallasTemp.requestTemperatures();
+    float tempC = m_dallasTemp.getTempCByIndex(0);
 //
-//    ESP_LOGI(TAG, "getTemp() = %f", tempC);
+    ESP_LOGI(TAG, "getTemp() = %f", tempC);
 //    return tempC;
 
     /// DHT Stuff
