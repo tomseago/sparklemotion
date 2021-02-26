@@ -141,6 +141,9 @@ sample code bearing this copyright.
 
 //#include <Arduino.h>
 
+#include "brain_common.h"
+static const char* TAG = TAG_PROBE;
+
 // For things like uint8_t
 #include <stdint.h>
 
@@ -330,6 +333,8 @@ uint8_t OneWire::reset(void)
 	uint8_t r;
 	uint8_t retries = 125;
 
+	// Don't start the reset if some device is pulling
+	// the wire low already.
 	noInterrupts();
 	DIRECT_MODE_INPUT(reg, mask);
 	interrupts();
@@ -339,16 +344,24 @@ uint8_t OneWire::reset(void)
 		delayMicroseconds(2);
 	} while ( !DIRECT_READ(reg, mask));
 
+	// Beginning of reset pulse t=0
 	noInterrupts();
 	DIRECT_WRITE_LOW(reg, mask);
 	DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
 	interrupts();
 	delayMicroseconds(480);
+
+	// t=480us - the minimum value for reset. Could be slightly longer even
 	noInterrupts();
 	DIRECT_MODE_INPUT(reg, mask);	// allow it to float
+	// The device will detect this rising edge and waits 15-60us
+	// before adding it's presence signal (pulling th bus low)
 	delayMicroseconds(70);
 	r = !DIRECT_READ(reg, mask);
 	interrupts();
+
+	// Add some additional wait time so that the time from rising
+	// edge to next time slot is 480us minimum
 	delayMicroseconds(410);
 	return r;
 }
@@ -362,7 +375,17 @@ void OneWire::write_bit(uint8_t v)
 	IO_REG_TYPE mask IO_REG_MASK_ATTR = bitmask;
 	volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
 
+	// Write time slots must be a minimum of 60us in length
+	// and must have at least 1us of space between them
+
 	if (v & 1) {
+	    // To write a 1 the bus is pulled low and then
+	    // released within 15us. It is then held high for
+	    // the remainder of the time slot.
+	    // We use 10us for the initial low pulse which
+	    // means at least 50us would be needed to complete the
+	    // slot plus the 1us padding. We use 55 so that our
+	    // total slot plus padding is roughly 65us
 		noInterrupts();
 		DIRECT_WRITE_LOW(reg, mask);
 		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
@@ -371,6 +394,10 @@ void OneWire::write_bit(uint8_t v)
 		interrupts();
 		delayMicroseconds(55);
 	} else {
+	    // To write a 0 the bus is pulled low and then must
+	    // remain low for the entire 60us slot. We exceed that
+	    // by driving it low for 65us total and add a 5us padding
+	    // at the end
 		noInterrupts();
 		DIRECT_WRITE_LOW(reg, mask);
 		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
@@ -391,15 +418,23 @@ uint8_t OneWire::read_bit(void)
 	volatile IO_REG_TYPE *reg IO_REG_BASE_ATTR = baseReg;
 	uint8_t r;
 
+	// Read time slots are a minimum of 60us in duration with a
+	// minimum 1us recovery between slots.
+	// The slot is initiated by pulling the bus low for >1us and
+	// then releasing the bus. This short low pulse (which looks
+	// like a write 1 slot) causes the device to transmit by attempting
+	// to control the bus within the 15us window. The master must
+	// read within this window and then must allow time for the
+	// completion of the full read time slot.
 	noInterrupts();
 	DIRECT_MODE_OUTPUT(reg, mask);
 	DIRECT_WRITE_LOW(reg, mask);
-	delayMicroseconds(3);
+	delayMicroseconds(2); // 3
 	DIRECT_MODE_INPUT(reg, mask);	// let pin float, pull up will raise
-	delayMicroseconds(10);
+	delayMicroseconds(10); // Leave 3 us in the 15us slot
 	r = DIRECT_READ(reg, mask);
 	interrupts();
-	delayMicroseconds(53);
+	delayMicroseconds(50); // Was 53, 12 elapsed, so 3 + 45 + buffer
 	return r;
 }
 
@@ -443,7 +478,7 @@ uint8_t OneWire::read() {
     uint8_t r = 0;
 
     for (bitMask = 0x01; bitMask; bitMask <<= 1) {
-	if ( OneWire::read_bit()) r |= bitMask;
+	    if ( OneWire::read_bit()) r |= bitMask;
     }
     return r;
 }
@@ -489,6 +524,7 @@ void OneWire::depower()
 void OneWire::reset_search()
 {
   // reset the search state
+  ESP_LOGW(TAG, "Reset search state");
   LastDiscrepancy = 0;
   LastDeviceFlag = false;
   LastFamilyDiscrepancy = 0;
@@ -544,11 +580,17 @@ bool OneWire::search(uint8_t *newAddr, bool search_mode /* = true */)
    rom_byte_mask = 1;
    search_result = false;
 
-   // if the last call was not the last one
+    ESP_LOGI(TAG, "search(%02x%02x%02x%02x %02x%02x%02x%02x, %d) ldf=%d",
+             newAddr[0], newAddr[1], newAddr[2], newAddr[3],
+             newAddr[4], newAddr[5], newAddr[6], newAddr[7],
+             search_mode, LastDeviceFlag);
+
+    // if the last call was not the last one
    if (!LastDeviceFlag) {
       // 1-Wire reset
       if (!reset()) {
          // reset the search
+         ESP_LOGE(TAG, "1-wire reset failed");
          LastDiscrepancy = 0;
          LastDeviceFlag = false;
          LastFamilyDiscrepancy = 0;
@@ -568,15 +610,20 @@ bool OneWire::search(uint8_t *newAddr, bool search_mode /* = true */)
          // read a bit and its complement
          id_bit = read_bit();
          cmp_id_bit = read_bit();
+//         ESP_LOGD(TAG, "===> id_bit(%d)=%d  cmp_id_bit=%d, rom_byte_number=%d",
+//                  id_bit_number, id_bit, cmp_id_bit, rom_byte_number);
 
          // check for no devices on 1-wire
          if ((id_bit == 1) && (cmp_id_bit == 1)) {
-            break;
+             ESP_LOGE(TAG, "no devices ---- Probably a wiring issue right?" );
+             break;
          } else {
             // all devices coupled have 0 or 1
             if (id_bit != cmp_id_bit) {
+//                ESP_LOGD(TAG, "complement is really the complement");
                search_direction = id_bit;  // bit write value for search
             } else {
+//                ESP_LOGD(TAG, "Double 0 discrepancy, LastDiscrepancy=%d", LastDiscrepancy);
                // if this discrepancy if before the Last Discrepancy
                // on a previous next then pick the same as last time
                if (id_bit_number < LastDiscrepancy) {
@@ -603,6 +650,7 @@ bool OneWire::search(uint8_t *newAddr, bool search_mode /* = true */)
               ROM_NO[rom_byte_number] &= ~rom_byte_mask;
 
             // serial number search direction write bit
+            //ESP_LOGD(TAG, "write search_direction=%d, rom_byte_number=%d, rom_byte_mask=0x%x", search_direction, rom_byte_number, rom_byte_mask);
             write_bit(search_direction);
 
             // increment the byte counter id_bit_number
@@ -620,26 +668,37 @@ bool OneWire::search(uint8_t *newAddr, bool search_mode /* = true */)
       while(rom_byte_number < 8);  // loop until through all ROM bytes 0-7
 
       // if the search was successful then
-      if (!(id_bit_number < 65)) {
+      if (id_bit_number >= 65) {
+          ESP_LOGD(TAG, "Good data, id_bit_number=%d", id_bit_number);
          // search successful so set LastDiscrepancy,LastDeviceFlag,search_result
          LastDiscrepancy = last_zero;
 
          // check for last device
          if (LastDiscrepancy == 0) {
+             ESP_LOGD(TAG, "Setting LastDeviceFlag to true");
             LastDeviceFlag = true;
          }
          search_result = true;
+      } else {
+          ESP_LOGD(TAG, "Insufficient data, search fail, id_bit_number=%d", id_bit_number);
       }
    }
 
-   // if no device found then reset counters so next 'search' will be like a first
+    ESP_LOGW(TAG, "ROM_NO=%02x%02x%02x%02x %02x%02x%02x%02x",
+             ROM_NO[0], ROM_NO[1], ROM_NO[2], ROM_NO[3],
+             ROM_NO[4], ROM_NO[5], ROM_NO[6], ROM_NO[7]);
+
+    // if no device found then reset counters so next 'search' will be like a first
    if (!search_result || !ROM_NO[0]) {
+       ESP_LOGD(TAG, "not found search_result=%d, ROM_NO[0]=%d", search_result, ROM_NO[0]);
       LastDiscrepancy = 0;
       LastDeviceFlag = false;
       LastFamilyDiscrepancy = 0;
       search_result = false;
    } else {
       for (int i = 0; i < 8; i++) newAddr[i] = ROM_NO[i];
+
+        ESP_LOGW(TAG, "Found an address");
    }
    return search_result;
   }

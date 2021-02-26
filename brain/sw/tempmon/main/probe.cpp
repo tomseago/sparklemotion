@@ -153,7 +153,9 @@ static void glue_task(void* pvParameters) {
 
 ///////////////////////////////////////////////////////////////
 
-Probe::Probe() {
+Probe::Probe() :
+    m_dhtSensor(GPIO_NUM_19, *this)
+{
 
 }
 
@@ -163,8 +165,11 @@ Probe::start(TaskDef taskDef) {
 
     m_oneWire.begin(21);
     m_dallasTemp.setOneWire(&m_oneWire);
-
+    m_dallasTemp.begin();
     ESP_LOGI(TAG, "===> Number of temp devices: %d", m_dallasTemp.getDeviceCount());
+
+    m_dhtSensor.start();
+
 
     auto tcResult = taskDef.createTask(glue_task, this, nullptr);
 
@@ -175,38 +180,79 @@ Probe::start(TaskDef taskDef) {
     }
 }
 
+void
+Probe::dhtSensorReadData(DHTSensor& sensor) {
+    ESP_LOGW(TAG, "tempReading at=%lld, rh=%f, tempC=%f, tempF=%f",
+             sensor.getReadingAt(), sensor.getRelativeHumidity(),
+             sensor.getTemperature(), sensor.getTemperature(true));
+
+}
+
+
 #define LOOP_SECONDS 10
+
+//void
+//Probe::_task() {
+//    // Initialization
+//    // Task actions
+//    TickType_t xLastWakeTime = xTaskGetTickCount();
+//    const TickType_t xFrequency = LOOP_SECONDS * xPortGetTickRateHz();
+//
+////    outputTestVals();
+//
+//    while(1) {
+//        gSysMon.startTiming(TIMING_RENDER);
+////        m_dallasTemp.begin();
+////        ESP_LOGI(TAG, "===> Number of temp devices: %d", m_dallasTemp.getDeviceCount());
+//        this->getTemp();
+//        gSysMon.endTiming(TIMING_RENDER);
+//        vTaskDelayUntil( &xLastWakeTime, xFrequency );
+//    }
+//
+//    // Just in case we ever exit, we're supposed to do this.
+//    // This seems to _work_ more or less, but sure doesn't seem like
+//    // the safest thing because like, there are callbacks bro!
+//    vTaskDelete(nullptr);
+//}
 
 void
 Probe::_task() {
-    // Initialization
-    // Task actions
-    TickType_t xLastWakeTime = xTaskGetTickCount();
-    const TickType_t xFrequency = LOOP_SECONDS * xPortGetTickRateHz();
+    uint32_t notifVal;
 
-//    outputTestVals();
+    m_dhtSensor.setTaskHandle(xTaskGetCurrentTaskHandle());
+    TickType_t xLastWakeTime = xTaskGetTickCount();
 
     while(1) {
-        gSysMon.startTiming(TIMING_RENDER);
-        this->getTemp();
-        gSysMon.endTiming(TIMING_RENDER);
-        vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    }
+        xTaskNotifyWait(0xffffffff, 0x0, &notifVal, 2);
 
-    // Just in case we ever exit, we're supposed to do this.
-    // This seems to _work_ more or less, but sure doesn't seem like
-    // the safest thing because like, there are callbacks bro!
-    vTaskDelete(nullptr);
+        if (notifVal) {
+            m_dhtSensor._callListener(++m_notifCount);
+        }
+
+        m_dhtSensor._edgeTimeout();
+
+        // Maybe we start another read?
+        TickType_t xWakeTime = xTaskGetTickCount();
+        if (xWakeTime - xLastWakeTime > pdMS_TO_TICKS(10000)) {
+            // Do a start time
+            xLastWakeTime = xWakeTime;
+            m_dhtSensor.maybeRead();
+        }
+    }
 }
 
 float
 Probe::getTemp() {
 //    float t = ds18b20_get_temp();
 
-    m_dallasTemp.requestTemperatures();
-    float tempC = m_dallasTemp.getTempCByIndex(0);
+//    m_dallasTemp.requestTemperatures();
+//    float tempC = m_dallasTemp.getTempCByIndex(0);
+//
+//    ESP_LOGI(TAG, "getTemp() = %f", tempC);
+//    return tempC;
 
-    ESP_LOGI(TAG, "getTemp() = %f", tempC);
+    /// DHT Stuff
+    m_dhtSensor.maybeRead();
 
-    return tempC;
+    return 0;
 }

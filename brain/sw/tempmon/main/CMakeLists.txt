@@ -4,6 +4,7 @@ set(COMPONENT_SRCS
         "probe.cpp"
         "OneWire.cpp"
         "DallasTemp.cpp"
+        "DHTSensor.cpp"
 )
 
 set(COMPONENT_ADD_INCLUDEDIRS ".")

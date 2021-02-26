@@ -6,8 +6,6 @@
 #include "tempmon.h"
 #include "brain_common.h"
 
-#include "esp_log.h"
-
 #include "freertos/FreeRTOS.h"
 #include "freertos/timers.h"
 

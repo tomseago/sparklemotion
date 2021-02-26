@@ -65,7 +65,7 @@ extern "C" void app_main()
     esp_log_level_set(TAG_ISO, ESP_LOG_DEBUG);
     esp_log_level_set(TAG_CS, ESP_LOG_DEBUG);
 
-    esp_log_level_set(TAG_PROBE, ESP_LOG_DEBUG);
+    esp_log_level_set(TAG_PROBE, ESP_LOG_INFO);
 
     // Configure the default event loop before anything else happens
     ESP_LOGD(TAG_MAIN, "Main task name = %s", pcTaskGetTaskName(nullptr));

@@ -5,6 +5,10 @@
 
 #include "DallasTemp.h"
 
+#include "brain_common.h"
+static const char* TAG = TAG_PROBE;
+
+
 #define ARDUINO_ARCH_ESP32
 
 #if ARDUINO >= 100
@@ -128,13 +132,20 @@ void DallasTemp::setOneWire(OneWire* _oneWire) {
 // initialise the bus
 void DallasTemp::begin(void) {
 
-	DeviceAddress deviceAddress;
+//	DeviceAddress deviceAddress = {0, 0, 0, 0, 0, 0, 0, 0};
+//    DeviceAddress deviceAddress = {1, 2, 3, 4, 5, 6, 7, 8};
+    DeviceAddress deviceAddress;
 
+    ESP_LOGW(TAG, ">> begin search for devices");
 	_wire->reset_search();
 	devices = 0; // Reset the number of devices when we enumerate wire devices
 	ds18Count = 0; // Reset number of DS18xxx Family devices
 
+    ESP_LOGI(TAG, ">> deviceAddress(%02x%02x%02x%02x %02x%02x%02x%02x)",
+             deviceAddress[0], deviceAddress[1], deviceAddress[2], deviceAddress[3],
+             deviceAddress[4], deviceAddress[5], deviceAddress[6], deviceAddress[7]);
 	while (_wire->search(deviceAddress)) {
+	    ESP_LOGI(TAG, ">> search returned true");
 
 		if (validAddress(deviceAddress)) {
 
@@ -149,7 +160,7 @@ void DallasTemp::begin(void) {
 			}
 		}
 	}
-
+    ESP_LOGI(TAG, ">> Done searching 1 wire bus, devices=%d", devices);
 }
 
 // returns the number of devices found on the bus
@@ -197,16 +208,31 @@ bool DallasTemp::isConnected(const uint8_t* deviceAddress) {
 bool DallasTemp::isConnected(const uint8_t* deviceAddress,
 		uint8_t* scratchPad) {
 	bool b = readScratchPad(deviceAddress, scratchPad);
-	return b && !isAllZeros(scratchPad) && (_wire->crc8(scratchPad, 8) == scratchPad[SCRATCHPAD_CRC]);
+	bool crcOk = (_wire->crc8(scratchPad, 8) == scratchPad[SCRATCHPAD_CRC]);
+	if (!crcOk) {
+	    ESP_LOGE(TAG, "scratch crc8 failed");
+	}
+	bool isConn = b && !isAllZeros(scratchPad) && crcOk;
+	ESP_LOGI(TAG, "isConnected = %d", isConn);
+	return isConn;
 }
 
 bool DallasTemp::readScratchPad(const uint8_t* deviceAddress,
 		uint8_t* scratchPad) {
 
-	// send the reset command and fail fast
+    ESP_LOGI(TAG, "readScratchPad(%02x%02x%02x%02x %02x%02x%02x%02x)",
+             deviceAddress[0], deviceAddress[1], deviceAddress[2], deviceAddress[3],
+             deviceAddress[4], deviceAddress[5], deviceAddress[6], deviceAddress[7]);
+    ESP_LOGI(TAG, "  scratch before=%02x%02x%02x%02x %02x%02x%02x%02x",
+             scratchPad[0], scratchPad[1], scratchPad[2], scratchPad[3],
+             scratchPad[4], scratchPad[5], scratchPad[6], scratchPad[7]);
+
+    // send the reset command and fail fast
 	int b = _wire->reset();
-	if (b == 0)
-		return false;
+	if (b == 0) {
+	    ESP_LOGE(TAG, "Failed to reset the bus at start of readScratchPad");
+        return false;
+	}
 
 	_wire->select(deviceAddress);
 	_wire->write(READSCRATCH);
@@ -227,8 +253,14 @@ bool DallasTemp::readScratchPad(const uint8_t* deviceAddress,
 	for (uint8_t i = 0; i < 9; i++) {
 		scratchPad[i] = _wire->read();
 	}
+    ESP_LOGI(TAG, "  scratch after =%02x%02x%02x%02x %02x%02x%02x%02x",
+             scratchPad[0], scratchPad[1], scratchPad[2], scratchPad[3],
+             scratchPad[4], scratchPad[5], scratchPad[6], scratchPad[7]);
 
 	b = _wire->reset();
+	if (!b) {
+        ESP_LOGE(TAG, "Failed to reset the bus at end of readScratchPad");
+	}
 	return (b == 1);
 }
 
@@ -419,15 +451,20 @@ bool DallasTemp::isConversionComplete() {
 // sends command for all devices on the bus to perform a temperature conversion
 void DallasTemp::requestTemperatures() {
 
-	_wire->reset();
+    ESP_LOGI(TAG, "_wire->reset()=%d", _wire->reset());
+    ESP_LOGI(TAG, "_wire->skip()");
 	_wire->skip();
+    ESP_LOGI(TAG, "_wire->write()");
 	_wire->write(STARTCONVO, parasite);
 
 	// ASYNC mode?
-	if (!waitForConversion)
-		return;
+	if (!waitForConversion) {
+        ESP_LOGI(TAG, "!waitForConversion");
+        return;
+    }
 	blockTillConversionComplete(bitResolution);
 
+    ESP_LOGI(TAG, "blocking completed bitResolution=%d", bitResolution);
 }
 
 // sends command for one device to perform a temperature by address

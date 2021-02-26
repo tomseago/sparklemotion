@@ -8,8 +8,9 @@
 
 #include "OneWire.h"
 #include "DallasTemp.h"
+#include "DHTSensor.h"
 
-class Probe {
+class Probe : public DHTSensorListener {
 public:
     Probe();
 
@@ -19,9 +20,12 @@ public:
 
     float getTemp();
 
+    virtual void dhtSensorReadData(DHTSensor& sensor);
+
 private:
+    uint32_t m_notifCount;
 
     OneWire m_oneWire;
     DallasTemp m_dallasTemp;
-
+    DHTSensor m_dhtSensor;
 };
