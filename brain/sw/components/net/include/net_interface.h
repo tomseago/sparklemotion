@@ -18,7 +18,7 @@ public:
     virtual void netIntStart(NetInterface* interface) = 0;
     virtual void netIntStop(NetInterface* interface) = 0;
 
-    virtual void netIntGotAddr(NetInterface* interface, const tcpip_adapter_ip_info_t* info) = 0;
+    virtual void netIntGotAddr(NetInterface* interface, esp_netif_ip_info_t* info) = 0;
 };
 
 class NetInterface {
@@ -120,7 +120,7 @@ protected:
         m_listener->netIntStop(this);
     }
 
-    void tellListenerGotAddr(const tcpip_adapter_ip_info_t* info) {
+    void tellListenerGotAddr(esp_netif_ip_info_t* info) {
         if (!m_listener) return;
         m_listener->netIntGotAddr(this, info);
     };

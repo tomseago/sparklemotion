@@ -157,7 +157,7 @@ NetTransport::netIntStop(NetInterface *interface) {
 }
 
 void
-NetTransport::netIntGotAddr(NetInterface *interface, const tcpip_adapter_ip_info_t *info) {
+NetTransport::netIntGotAddr(NetInterface *interface, esp_netif_ip_info_t *info) {
     ESP_LOGI(TAG, "(task=%s) (%s) Got address, ip " IPSTR ", mask " IPSTR ", gw " IPSTR,
             pcTaskGetTaskName(nullptr), interface->name(),
             IP2STR(&info->ip), IP2STR(&info->ip), IP2STR(&info->ip));

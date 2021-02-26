@@ -102,7 +102,7 @@ EthInterface::_evtHandler(esp_event_base_t evBase, int32_t evId, void *evData) {
         }
     } else if (evBase == IP_EVENT) {
         ip_event_got_ip_t *event = (ip_event_got_ip_t *) evData;
-        const tcpip_adapter_ip_info_t *ip_info = &event->ip_info;
+        esp_netif_ip_info_t *ip_info = &event->ip_info;
 
         tellListenerGotAddr(ip_info);
     }

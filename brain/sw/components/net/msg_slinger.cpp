@@ -81,8 +81,8 @@ MsgSlinger::_gotIp(int32_t id, void* data) {
 
     ESP_LOGI(TAG, "gotIP(%d, %p)", id, data);
 
-    tcpip_adapter_ip_info_t ethInfo = {};
-    tcpip_adapter_ip_info_t staInfo = {};
+    esp_netif_ip_info_t ethInfo = {};
+    esp_netif_ip_info_t  staInfo = {};
 
     if (data) {
         // It's a valid system event

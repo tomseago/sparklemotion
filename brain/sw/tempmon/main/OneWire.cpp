@@ -221,23 +221,23 @@ extern void IRAM_ATTR pinMode(uint8_t pin, uint8_t mode)
         return;
     }
 
-    uint32_t rtc_reg = rtc_gpio_desc[pin].reg;
+    uint32_t rtc_reg = rtc_io_desc[pin].reg;
     if(mode == ANALOG) {
         if(!rtc_reg) {
             return;//not rtc pin
         }
         //lock rtc
         uint32_t reg_val = ESP_REG(rtc_reg);
-        if(reg_val & rtc_gpio_desc[pin].mux){
+        if(reg_val & rtc_io_desc[pin].mux){
             return;//already in adc mode
         }
         reg_val &= ~(
-                (RTC_IO_TOUCH_PAD1_FUN_SEL_V << rtc_gpio_desc[pin].func)
-                |rtc_gpio_desc[pin].ie
-                |rtc_gpio_desc[pin].pullup
-                |rtc_gpio_desc[pin].pulldown);
-        ESP_REG(RTC_GPIO_ENABLE_W1TC_REG) = (1 << (rtc_gpio_desc[pin].rtc_num + RTC_GPIO_ENABLE_W1TC_S));
-        ESP_REG(rtc_reg) = reg_val | rtc_gpio_desc[pin].mux;
+                (RTC_IO_TOUCH_PAD1_FUN_SEL_V << rtc_io_desc[pin].func)
+                |rtc_io_desc[pin].ie
+                |rtc_io_desc[pin].pullup
+                |rtc_io_desc[pin].pulldown);
+        ESP_REG(RTC_GPIO_ENABLE_W1TC_REG) = (1 << (rtc_io_desc[pin].rtc_num + RTC_GPIO_ENABLE_W1TC_S));
+        ESP_REG(rtc_reg) = reg_val | rtc_io_desc[pin].mux;
         //unlock rtc
         ESP_REG(DR_REG_IO_MUX_BASE + esp32_gpioMux[pin].reg) = ((uint32_t)2 << MCU_SEL_S) | ((uint32_t)2 << FUN_DRV_S) | FUN_IE;
         return;
@@ -246,13 +246,13 @@ extern void IRAM_ATTR pinMode(uint8_t pin, uint8_t mode)
     //RTC pins PULL settings
     if(rtc_reg) {
         //lock rtc
-        ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_gpio_desc[pin].mux);
+        ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_io_desc[pin].mux);
         if(mode & PULLUP) {
-            ESP_REG(rtc_reg) = (ESP_REG(rtc_reg) | rtc_gpio_desc[pin].pullup) & ~(rtc_gpio_desc[pin].pulldown);
+            ESP_REG(rtc_reg) = (ESP_REG(rtc_reg) | rtc_io_desc[pin].pullup) & ~(rtc_io_desc[pin].pulldown);
         } else if(mode & PULLDOWN) {
-            ESP_REG(rtc_reg) = (ESP_REG(rtc_reg) | rtc_gpio_desc[pin].pulldown) & ~(rtc_gpio_desc[pin].pullup);
+            ESP_REG(rtc_reg) = (ESP_REG(rtc_reg) | rtc_io_desc[pin].pulldown) & ~(rtc_io_desc[pin].pullup);
         } else {
-            ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_gpio_desc[pin].pullup | rtc_gpio_desc[pin].pulldown);
+            ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_io_desc[pin].pullup | rtc_io_desc[pin].pulldown);
         }
         //unlock rtc
     }
