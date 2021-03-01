@@ -47,3 +47,4 @@
 #define TAG_CS      "#    cs"
 
 #define TAG_PROBE   "# probe"
+#define TAG_SCREEN   "#screen"

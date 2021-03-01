@@ -17,6 +17,8 @@
 #include "http_server.h"
 //#include "ota_fetcher.h"
 #include "probe.h"
+#include "screen.h"
+#include "screen_driver_ssd1306.h"
 
 // #include "iso-control-state.h"
 // #include "iso-shader-stack.h"
@@ -43,6 +45,9 @@ private:
     NetTransport m_netTransport;
 
     Probe m_probe;
+
+    ScreenDriverSSD1306 m_driver;
+    Screen m_screen;
 
     // TimeBase m_timeBase;
 

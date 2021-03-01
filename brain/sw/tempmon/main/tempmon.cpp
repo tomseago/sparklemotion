@@ -21,7 +21,10 @@ static const char* TAG = TAG_BRAIN;
 //     ((Tempmon*)arg)->_handleEvent(base, id, data);
 // }
 
-Tempmon::Tempmon() 
+Tempmon::Tempmon() :
+    m_driver(128, 64, GPIO_NUM_27, GPIO_NUM_14),
+    m_screen(m_driver)
+
 // :
 //     m_ledRenderer(m_timeBase, m_pixelCount),
 //     m_menu(*this)
@@ -38,6 +41,8 @@ Tempmon::start() {
     m_netTransport.start(DefaultBrainTasks.net);
 
     m_probe.start(DefaultBrainTasks.probe);
+//    m_screen.start(DefaultBrainTasks.screen);
+
 
     // m_state.setChosenColor(0, RgbColor(0, 190, 255));
 

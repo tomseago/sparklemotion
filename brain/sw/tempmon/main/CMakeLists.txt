@@ -9,7 +9,7 @@ set(COMPONENT_SRCS
 
 set(COMPONENT_ADD_INCLUDEDIRS ".")
 set(COMPONENT_REQUIRES brain-common
-        spiffs brain-httpd net sysmon esp_https_ota
+        spiffs brain-httpd net sysmon esp_https_ota screen
         )
 
 register_component()

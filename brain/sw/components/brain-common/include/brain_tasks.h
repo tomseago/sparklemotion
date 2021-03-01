@@ -121,6 +121,17 @@ struct BrainTasks {
     };
 
     /**
+     * The screen task handles communication via I2C to oled panels and eventually
+     * maybe to other things like LCD panels.
+     */
+    TaskDef screen = {
+            .name = "screen",
+            .stack = 3024,
+            .priority = 5,
+            .coreId = tskNO_AFFINITY,
+    };
+
+    /**
      * The UI task processes button presses and turns them into key events.
      * It also drives the on-board leds like the eyes and the tri-color
      * led.
