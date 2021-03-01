@@ -6,8 +6,8 @@
 
 #include "brain_common.h"
 
-#include "OneWire.h"
-#include "DallasTemp.h"
+//#include "OneWire.h"
+//#include "DallasTemp.h"
 #include "DHTSensor.h"
 
 class Probe : public DHTSensorListener {
@@ -25,7 +25,10 @@ public:
 private:
     uint32_t m_notifCount;
 
-    OneWire m_oneWire;
-    DallasTemp m_dallasTemp;
+    // The crap one wire stuff seems incompatible with weird other things
+    // It does some direct memory reads that are prohibited. Just leaving
+    // it our rather than debugging at this point.
+//    OneWire m_oneWire;
+//    DallasTemp m_dallasTemp;
     DHTSensor m_dhtSensor;
 };

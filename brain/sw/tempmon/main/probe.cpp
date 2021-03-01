@@ -163,10 +163,10 @@ void
 Probe::start(TaskDef taskDef) {
 //    ds18b20_init(GPIO_NUM_21);
 
-    m_oneWire.begin(21);
-    m_dallasTemp.setOneWire(&m_oneWire);
-    m_dallasTemp.begin();
-    ESP_LOGI(TAG, "===> Number of temp devices: %d", m_dallasTemp.getDeviceCount());
+//    m_oneWire.begin(21);
+//    m_dallasTemp.setOneWire(&m_oneWire);
+//    m_dallasTemp.begin();
+//    ESP_LOGI(TAG, "===> Number of temp devices: %d", m_dallasTemp.getDeviceCount());
 
     m_dhtSensor.start();
 
@@ -246,10 +246,10 @@ float
 Probe::getTemp() {
 //    float t = ds18b20_get_temp();
 
-    m_dallasTemp.requestTemperatures();
-    float tempC = m_dallasTemp.getTempCByIndex(0);
-//
-    ESP_LOGI(TAG, "getTemp() = %f", tempC);
+//    m_dallasTemp.requestTemperatures();
+//    float tempC = m_dallasTemp.getTempCByIndex(0);
+////
+//    ESP_LOGI(TAG, "getTemp() = %f", tempC);
 //    return tempC;
 
     /// DHT Stuff

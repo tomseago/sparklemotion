@@ -30,14 +30,22 @@ ScreenDriver::~ScreenDriver() {
 
 void
 ScreenDriver::postToQueue(void *msg) {
-    xQueueSend(m_qSend, msg, 0);
+    TaskHandle_t curTask = xTaskGetCurrentTaskHandle();
+
+//    ESP_LOGW(TAG, "Posting to queue: %p <- &%p  (task %p)", msg, &msg, curTask);
+    xQueueSend(m_qSend, &msg, 0);
 }
 
 void
 ScreenDriver::handleQueue() {
+    TaskHandle_t curTask = xTaskGetCurrentTaskHandle();
     void* pMsg;
 
     if (xQueueReceive(m_qSend, &pMsg, pdMS_TO_TICKS(500))) {
+//        ESP_LOGW(TAG, "Received from queue: %p <- &%p (task %p)", pMsg, *(void**)pMsg, curTask);
         handleMsg(pMsg);
+        ESP_LOGI(TAG, "Message handling complete: %p, (task %p)", pMsg, curTask);
+    } else {
+//        ESP_LOGI(TAG, "No screen message to handle (task %p)", curTask);
     }
 }

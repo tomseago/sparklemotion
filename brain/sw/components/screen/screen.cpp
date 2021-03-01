@@ -23,17 +23,20 @@ Screen::start(TaskDef taskDef) {
     auto tcResult = taskDef.createTask(glue_task, this, nullptr);
 
     if (tcResult != pdPASS) {
-        ESP_LOGE(TAG, "Failed to create probe task = %d", tcResult);
+        ESP_LOGE(TAG, "Failed to create screen task = %d", tcResult);
     } else {
-        ESP_LOGI(TAG, "Probe task started");
+        ESP_LOGI(TAG, "Screen task started");
     }
+    ESP_LOGD(TAG, "Screen.start() end");
 }
 
 void
 Screen::_task() {
+    ESP_LOGD(TAG, "Screen._task()");
     m_driver.start();
 
     while(true) {
+//        ESP_LOGD(TAG, "Screen._task() handleQueue()");
         m_driver.handleQueue();
     }
 }

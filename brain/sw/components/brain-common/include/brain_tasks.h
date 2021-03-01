@@ -128,7 +128,7 @@ struct BrainTasks {
             .name = "screen",
             .stack = 3024,
             .priority = 5,
-            .coreId = tskNO_AFFINITY,
+            .coreId = APP_CPU_NUM,
     };
 
     /**
