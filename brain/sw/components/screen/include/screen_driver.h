@@ -5,8 +5,50 @@
 #pragma once
 
 #include "brain_common.h"
-#include <freertos/queue.h>
 
+
+struct ScreenDriverCommand {
+    enum Kind {
+        Reset,
+        Clear,
+        Pattern,
+        Blit,
+        Write,
+        Rectangle,
+        Line,
+        Pixmap,
+    };
+
+    Kind kind;
+
+    enum Pattern {
+        Diagonals,
+        Checkerboard,
+        CheckerboardAlt,
+    };
+
+    struct WriteData {
+        uint8_t *data;
+        uint32_t len;
+    };
+
+    struct RectangleData {
+        uint8_t left;
+        uint8_t top;
+        uint8_t width;
+        uint8_t height;
+    };
+
+    union CommandData {
+        WriteData writeData;
+        RectangleData rectangleData;
+        enum Pattern patternData;
+    } data;
+};
+
+/**
+ * Handles internal screen buffers and implements drawing commands.
+ */
 class ScreenDriver {
 public:
     ScreenDriver(uint16_t width, uint16_t height);
@@ -14,22 +56,19 @@ public:
 
     virtual void start() = 0;
 
-    virtual void reset() = 0;
-    virtual void clear() = 0;
-    virtual void send() = 0;
-
     uint16_t width() const { return m_width; }
     uint16_t height() const { return m_height; }
 
-    void handleQueue();
+
+    virtual void doCommand(ScreenDriverCommand& cmd);
 
 protected:
     uint16_t m_width;
     uint16_t m_height;
 
-    uint8_t *m_bufFront;
-    QueueHandle_t m_qSend;
-
-    void postToQueue(void *msg);
-    virtual void handleMsg(void *msg) = 0;
+    virtual void handleReset() = 0;
+    virtual void handleClear() = 0;
+    virtual void handlePattern(enum ScreenDriverCommand::Pattern pattern) = 0;
+    virtual void handleBlit() = 0;
+    virtual void handleWrite(ScreenDriverCommand::WriteData& data) = 0;
 };

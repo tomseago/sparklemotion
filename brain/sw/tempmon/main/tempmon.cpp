@@ -22,7 +22,8 @@ static const char* TAG = TAG_BRAIN;
 // }
 
 Tempmon::Tempmon() :
-    m_driver(128, 64, GPIO_NUM_27, GPIO_NUM_14),
+//    m_driver(128, 64, GPIO_NUM_27, GPIO_NUM_14),
+    m_driver(128, 64, GPIO_NUM_22, GPIO_NUM_21),
     m_screen(m_driver)
 // :
 //     m_ledRenderer(m_timeBase, m_pixelCount),
