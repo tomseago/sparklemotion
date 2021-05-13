@@ -38,7 +38,19 @@ ScreenDriverSSD1306::start() {
     config.sda_pullup_en = GPIO_PULLUP_ENABLE;
     config.scl_io_num = m_pinSCL;
     config.scl_pullup_en = GPIO_PULLUP_ENABLE;
-    config.master.clk_speed = 700000; // 10000;
+
+    // For the clock speed we know that at least 700000 and slower speeds
+    // work. According to the library we referenced 700k works with an
+    // 8266 in 160 Mhz mode, but in 80 Mhz mode it's limited to around 400k.
+    // The ESP32 sdk says this is limited to 1Mhz "for now". A value of 1000000 does
+    // seem to work ok, but of course if the clock speed of the board is
+    // lowered it might not.
+    // 1024 * 1024 = Works
+    // 1025 * 1024 = Works
+    // 1250 * 1024 = Works <-- Stopping here for now
+    // 1500 * 1024 = Fail
+    // 2048 * 1024 = ESP_FAIL on command send
+    config.master.clk_speed = 1250 * 1024; // 10000;
     code = i2c_param_config(PORT, &config);
     if (code != ESP_OK) {
         ESP_LOGE(TAG, "Couldn't config I2C: %s", esp_err_to_name(code));
